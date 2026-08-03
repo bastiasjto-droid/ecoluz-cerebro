@@ -3,93 +3,181 @@ import pandas as pd
 import io
 import datetime
 
-st.set_page_config(page_title="Cerebro ECOLUZ", layout="wide")
-st.title("🧠 Cerebro de Especificaciones Técnicas ECOLUZ")
+# --- CONFIGURACIÓN DE DISEÑO ---
+st.set_page_config(page_title="Cerebro ECOLUZ", layout="wide", page_icon="🧠")
+st.markdown("""
+<style>
+    .stApp { background-color: #f4f7f6; }
+    h1 { color: #004d40; text-align: center; border-bottom: 4px solid #004d40; padding-bottom: 10px; }
+    h2, h3 { color: #00695c; background-color: #e0f2f1; padding: 10px; border-radius: 8px; }
+    .stButton>button { background-color: #004d40; color: white; border-radius: 10px; width: 100%; }
+</style>
+""", unsafe_allow_html=True)
 
-# --- SUBIDA DE ARCHIVOS ---
-st.sidebar.header("📎 Adjuntar Archivos (Planos/Fotos)")
-archivos_subidos = st.sidebar.file_uploader("Sube archivos para la especificación", accept_multiple_files=True)
-if archivos_subidos:
-    st.sidebar.success(f"✅ {len(archivos_subidos)} archivo(s) adjuntado(s).")
+st.title("🧠 CEREBRO ECOLUZ")
+st.markdown("### *Especificaciones Técnicas y Materiales*")
 
-# --- LOGICA DE MATERIALES (Base de datos de prueba) ---
-BASE_MATERIALES = {
-    "MAT01": {"desc": "Plancha Simplisima 6mm 1,2x2,4m", "unidad": "unid"},
-    "MAT02": {"desc": "Lana de roca 50mm 40-60kg/m3", "unidad": "m2"},
-    "MAT03": {"desc": "Pino seco cepillado 1x2 3,2m", "unidad": "unid"},
-    "MAT04": {"desc": "Sellador poliuretano Rex 600ml", "unidad": "unid"},
-    "MAT05": {"desc": "Tornillos autoperforantes c/trompeta c/100", "unidad": "caja"},
-    "MAT10": {"desc": "Ventana corredera aluminio 60x80cm", "unidad": "unid"},
-    "MAT12": {"desc": "Ceramico blanco", "unidad": "m2"},
-    "MAT16": {"desc": "Bolsas/productos limpieza", "unidad": "global"},
-}
+# --- SIDEBAR ---
+with st.sidebar:
+    st.header("📎 Adjuntar Planos/Fotos")
+    archivos_subidos = st.file_uploader("Sube archivos", accept_multiple_files=True)
+    if archivos_subidos:
+        st.success(f"✅ {len(archivos_subidos)} archivo(s) adjuntado(s).")
 
 # --- MENÚ PRINCIPAL ---
-especialidad = st.selectbox("Selecciona la especialidad del trabajo:", 
+especialidad = st.selectbox("SELECCIONA LA ESPECIALIDAD:", 
     ["Selecciona...", "Construcción Nueva", "Remodelación", "Reparación", "Electricidad", "Gasfitería", "Pintura", "Techumbre", "Jardinería", "Climatización"])
 
 # Diccionario para guardar las respuestas
 respuestas = {}
 
 if especialidad != "Selecciona...":
-    st.header(f"📋 Cuestionario Dinámico para: {especialidad}")
+    st.header(f"📋 CUESTIONARIO: {especialidad.upper()}")
     
     with st.form(f"form_{especialidad}"):
         
-        st.subheader("1. Información General")
-        respuestas['cliente'] = st.text_input("Nombre del cliente")
-        respuestas['direccion'] = st.text_input("Dirección exacta de la obra")
-        respuestas['m2'] = st.number_input("Metros cuadrados (m²) aproximados del proyecto:", min_value=1.0, step=1.0)
-        
-        st.divider()
-
-        # Lógica para guardar respuestas según especialidad
+        # ===================== CONSTRUCCIÓN NUEVA =====================
         if especialidad == "Construcción Nueva":
-            st.subheader("2. Estructura")
-            tipo = st.selectbox("Tipo de construcción:", ["Albañilería", "Hormigón", "Metalcon"], key="c_tipo")
-            respuestas['tipo'] = tipo
-            
-        elif especialidad == "Electricidad":
-            st.subheader("2. Instalación Eléctrica")
-            respuestas['circuitos'] = st.number_input("¿Cuántos circuitos independientes?", min_value=1, key="e_circuitos")
-            respuestas['enchufes'] = st.number_input("¿Cuántos enchufes?", min_value=0, key="e_enchufes")
-            respuestas['luminarias'] = st.number_input("¿Cuántas luminarias?", min_value=0, key="e_luminarias")
-            
-        enviar = st.form_submit_button("🛠️ GENERAR ESPECIFICACIÓN Y EXCEL")
+            st.subheader("1. Información del Proyecto")
+            c1, c2 = st.columns(2)
+            with c1:
+                respuestas['c_tipo'] = st.selectbox("¿Qué tipo de construcción?", ["Casa", "Local comercial", "Galpón", "Oficina", "Bodega"])
+                respuestas['c_uso'] = st.text_input("¿Cuál será el uso principal?")
+                respuestas['c_pisos'] = st.selectbox("¿Será de uno o más pisos?", ["1 Piso", "2 Pisos", "3 o más pisos"])
+            with c2:
+                respuestas['c_planos'] = st.radio("¿Cuenta con planos?", ["Sí, tengo planos", "Necesito diseño"])
 
-    # --- GENERACIÓN DEL EXCEL ---
+            st.subheader("2. Terreno y Fundaciones")
+            respuestas['t_ubicacion'] = st.text_input("Dirección del terreno")
+            respuestas['t_terreno'] = st.selectbox("¿El terreno es plano o pendiente?", ["Plano", "Pendiente suave", "Pendiente pronunciada"])
+            respuestas['t_servicios'] = st.radio("¿Cuenta con agua y electricidad?", ["Sí", "No"])
+            respuestas['t_alcantarillado'] = st.radio("¿Alcantarillado o fosa séptica?", ["Alcantarillado público", "Fosa séptica"])
+            respuestas['t_estudio'] = st.radio("¿Se realizó estudio de suelo?", ["Sí", "No"])
+
+            st.subheader("3. Estructura, Muros y Materiales")
+            respuestas['sys_const'] = st.selectbox("Sistema constructivo:", ["Albañilería", "Hormigón armado", "Metalcon", "Madera", "Panel SIP"])
+            if respuestas['sys_const'] == "Albañilería":
+                respuestas['ladrillo'] = st.selectbox("Tipo de ladrillo:", ["Ladrillo Fiscal", "Ladrillo Princesa"])
+                respuestas['estuco_int'] = st.radio("¿Llevará estuco interior?", ["Sí", "No"])
+                respuestas['estuco_ext'] = st.radio("¿Llevará estuco exterior?", ["Sí", "No"])
+                if respuestas['estuco_ext'] == "Sí":
+                    respuestas['impermeabilizante'] = st.radio("¿Llevará impermeabilizante en el estuco exterior?", ["Sí", "No"])
+            elif respuestas['sys_const'] == "Metalcon":
+                respuestas['metalcon_perfil'] = st.text_input("Espesor de perfiles (Ej: 90mm):")
+
+            st.subheader("4. Techumbre y Pisos")
+            respuestas['techo_tipo'] = st.selectbox("Tipo de cubierta:", ["Zinc", "Teja", "PV4", "Teja asfáltica"])
+            respuestas['techo_aislacion'] = st.radio("¿Instalará aislación térmica?", ["Sí", "No"])
+            respuestas['piso_tipo'] = st.selectbox("Tipo de piso:", ["Cerámica", "Porcelanato", "Flotante", "Vinílico", "Radier afinado"])
+            
+            st.subheader("5. Instalaciones Eléctricas y Sanitarias")
+            respuestas['enchufes'] = st.number_input("N° de enchufes:", min_value=0)
+            respuestas['luminarias'] = st.number_input("N° de luminarias:", min_value=0)
+            respuestas['banos'] = st.number_input("N° de baños:", min_value=0)
+            respuestas['cert_sec'] = st.radio("¿Necesita certificación SEC?", ["Sí", "No"])
+
+            st.subheader("6. Presupuesto y Plazos")
+            respuestas['presupuesto'] = st.number_input("Presupuesto disponible (CLP):", min_value=0)
+            respuestas['inicio'] = st.text_input("Fecha estimada de inicio:")
+            respuestas['plazo'] = st.text_input("Plazo estimado de entrega:")
+
+        # ===================== REMODELACIÓN =====================
+        elif especialidad == "Remodelación":
+            st.subheader("1. Información General")
+            respuestas['rm_area'] = st.text_input("¿Qué espacio desea remodelar? (Ej: Casa, local, oficina)")
+            respuestas['rm_partes'] = st.text_input("¿Qué áreas se remodelarán? (Cocina, baño, living, fachada)")
+            respuestas['rm_objetivo'] = st.text_area("¿Cuál es el objetivo de la remodelación?")
+            respuestas['rm_habitada'] = st.radio("¿La propiedad está habitada durante la remodelación?", ["Sí", "No"])
+
+            st.subheader("2. Estado Actual y Demolición")
+            respuestas['rm_daños'] = st.text_area("¿Cuál es el problema principal? (Grietas, humedad, filtraciones)")
+            respuestas['rm_demoler'] = st.radio("¿Se demolerán muros?", ["Sí", "No"])
+            if respuestas['rm_demoler'] == "Sí":
+                respuestas['rm_estructural'] = st.radio("¿Los muros a demoler son estructurales?", ["Sí", "No"])
+            respuestas['rm_escombros'] = st.radio("¿Se necesita retiro de escombros?", ["Sí", "No"])
+
+            st.subheader("3. Cambios y Materiales")
+            respuestas['rm_piso'] = st.radio("¿Se cambiarán los pisos?", ["Sí", "No"])
+            if respuestas['rm_piso'] == "Sí":
+                respuestas['rm_piso_tipo'] = st.selectbox("Nuevo tipo de piso:", ["Cerámica", "Porcelanato", "Flotante", "Vinílico", "Madera"])
+            respuestas['rm_puertas'] = st.radio("¿Se reemplazarán puertas y ventanas?", ["Sí", "No"])
+            
+            st.subheader("4. Presupuesto y Plazos")
+            respuestas['rm_presupuesto'] = st.number_input("Presupuesto disponible:", min_value=0)
+            respuestas['rm_inicio'] = st.text_input("Fecha estimada de inicio:")
+
+        # ===================== REPARACIÓN =====================
+        elif especialidad == "Reparación":
+            st.subheader("1. Información General")
+            respuestas['rep_que'] = st.text_area("¿Qué necesita reparar y dónde se encuentra?")
+            respuestas['rep_desde'] = st.text_input("¿Desde cuándo presenta la falla?")
+            respuestas['rep_causa'] = st.text_input("¿Cuál cree que fue la causa del problema?")
+            respuestas['rep_urgente'] = st.radio("¿La reparación es urgente?", ["Sí", "No"])
+
+            st.subheader("2. Evaluación del Daño")
+            respuestas['rep_estructura'] = st.radio("¿El problema afecta la estructura?", ["Sí", "No", "No sé"])
+            respuestas['rep_empeora'] = st.radio("¿El daño continúa empeorando?", ["Sí", "No", "No sé"])
+            
+            st.subheader("3. Detalles del Daño")
+            respuestas['rep_tipo'] = st.selectbox("¿Qué tipo de daño es?", ["Grietas/Fisuras", "Humedad/Filtraciones", "Desprendimiento de estuco", "Problema eléctrico", "Fuga de agua", "Otro"])
+            respuestas['rep_material'] = st.selectbox("Material del elemento dañado:", ["Ladrillo", "Bloque", "Hormigón", "Metalcon", "Madera", "Otro"])
+
+            st.subheader("4. Presupuesto y Ejecución")
+            respuestas['rep_presupuesto'] = st.number_input("Presupuesto disponible:", min_value=0)
+            respuestas['rep_inicio'] = st.text_input("¿Cuándo necesita realizar la reparación?")
+
+        # ===================== BOTÓN DE ENVIAR =====================
+        enviar = st.form_submit_button("🛠️ GENERAR ESPECIFICACIÓN Y EXCEL DE MATERIALES")
+
+    # ===================== LÓGICA DE CÁLCULO Y EXCEL =====================
     if enviar:
-        st.success("✅ ¡Especificación generada! Generando archivo Excel para tu cotización...")
+        st.success("✅ ¡Especificación guardada! Calculando materiales...")
+        lista_materiales = []
         
-        # 1. SIMULACIÓN DE CÁLCULOS
-        lista_materiales_excel = []
-        
+        # Lógica de Materiales para Construcción Nueva
         if especialidad == "Construcción Nueva":
-            m2 = respuestas['m2']
-            lista_materiales_excel.append(["Empalizado", "MAT03", m2])
-            lista_materiales_excel.append(["Empalizado", "MAT05", 2])
-            lista_materiales_excel.append(["Revestimiento", "MAT01", round(m2/2)])
+            # Simulación de cálculo basada en respuestas
+            lista_materiales.append(["Fundaciones", "Cemento", "10 sacos"])
+            lista_materiales.append(["Fundaciones", "Arena", "5 m3"])
             
-        elif especialidad == "Electricidad":
-            lista_materiales_excel.append(["Instalación Eléctrica", "MAT04", respuestas['enchufes'] * 2])
-            lista_materiales_excel.append(["Iluminación", "MAT05", respuestas['luminarias']])
+            if respuestas['sys_const'] == "Albañilería":
+                lista_materiales.append(["Muros", "Ladrillos", "600 unid"])
+                if respuestas['estuco_int'] == "Sí":
+                    lista_materiales.append(["Estuco Interior", "Cemento", "8 sacos"])
+                    lista_materiales.append(["Estuco Interior", "Arena", "4 m3"])
+                if respuestas['estuco_ext'] == "Sí":
+                    lista_materiales.append(["Estuco Exterior", "Cemento", "10 sacos"])
+                    lista_materiales.append(["Estuco Exterior", "Arena", "5 m3"])
+                    if respuestas['impermeabilizante'] == "Sí":
+                        lista_materiales.append(["Impermeabilizante", "Sellador", "2 unid"])
+            elif respuestas['sys_const'] == "Metalcon":
+                lista_materiales.append(["Estructura", "Perfiles Metalcon", "40 unid"])
+                
+        # Lógica de Materiales para Remodelación
+        elif especialidad == "Remodelación":
+            if respuestas['rm_demoler'] == "Sí":
+                lista_materiales.append(["Demolición", "Retiro escombros", "1 m3"])
+            if respuestas['rm_piso'] == "Sí":
+                lista_materiales.append(["Pisos", respuestas['rm_piso_tipo'], "10 m2"])
+                
+        # Lógica de Materiales para Reparación
+        elif especialidad == "Reparación":
+            if "Humedad" in respuestas['rep_tipo']:
+                lista_materiales.append(["Reparación", "Impermeabilizante", "1 unid"])
+            lista_materiales.append(["Reparación", "Pasta muro", "2 bolsas"])
+            lista_materiales.append(["Reparación", "Pintura", "1 galón"])
 
-        # 2. CREAR EL DATAFRAME DE EXCEL
-        df_output = pd.DataFrame(lista_materiales_excel, columns=["Partida", "Codigo Material", "Cantidad"])
+        # Crear DataFrame y descargar
+        df = pd.DataFrame(lista_materiales, columns=["Partida", "Material", "Cantidad"])
         
-        # 3. CONVERTIR A EXCEL PARA DESCARGA
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df_output.to_excel(writer, index=False, sheet_name='DESGLOSE_MATERIALES')
+            df.to_excel(writer, index=False, sheet_name='MATERIALES_CEREBRO')
         
-        processed_data = output.getvalue()
-        
-        # 4. BOTÓN DE DESCARGA
         st.download_button(
-            label="📥 DESCARGAR EXCEL PARA COTIZACIÓN",
-            data=processed_data,
-            file_name=f"Materiales_Cerebro_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+            label="📥 DESCARGAR EXCEL CON MATERIALES",
+            data=output.getvalue(),
+            file_name=f"Materiales_{especialidad}_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        
-        st.write("💡 **Instrucción:** Abre tu archivo `ECOLUZ_v3.0_RC6.xlsx`. Ve a la hoja `3. DESGLOSE MATERIALES`. Copia los datos de este archivo descargado y pégalos (sin fórmulas). La hoja `APU` y `COTIZACION` se actualizarán solas.")
+        st.info("💡 Instrucción: Abre tu archivo 'ECOLUZ_v3.0_RC6.xlsx', ve a 'DESGLOSE MATERIALES', y pega los datos de este archivo descargado para que el APU se calcule solo.")
