@@ -13,7 +13,6 @@ if archivos_subidos:
     st.sidebar.success(f"✅ {len(archivos_subidos)} archivo(s) adjuntado(s).")
 
 # --- LOGICA DE MATERIALES (Base de datos de prueba) ---
-# Esto se conectará después a tu lista de precios real.
 BASE_MATERIALES = {
     "MAT01": {"desc": "Plancha Simplisima 6mm 1,2x2,4m", "unidad": "unid"},
     "MAT02": {"desc": "Lana de roca 50mm 40-60kg/m3", "unidad": "m2"},
@@ -56,30 +55,26 @@ if especialidad != "Selecciona...":
             respuestas['enchufes'] = st.number_input("¿Cuántos enchufes?", min_value=0, key="e_enchufes")
             respuestas['luminarias'] = st.number_input("¿Cuántas luminarias?", min_value=0, key="e_luminarias")
             
-        # (Aquí podrías agregar más lógica para las otras especialidades según crezca)
-
         enviar = st.form_submit_button("🛠️ GENERAR ESPECIFICACIÓN Y EXCEL")
 
     # --- GENERACIÓN DEL EXCEL ---
     if enviar:
         st.success("✅ ¡Especificación generada! Generando archivo Excel para tu cotización...")
         
-        # 1. SIMULACIÓN DE CÁLCULOS (Aquí el cerebro decide qué materiales poner)
+        # 1. SIMULACIÓN DE CÁLCULOS
         lista_materiales_excel = []
         
-        # Ejemplo de lógica que el cerebro usará en el futuro:
         if especialidad == "Construcción Nueva":
-            # Calcular materiales según m2
             m2 = respuestas['m2']
-            lista_materiales_excel.append(["Empalizado", "MAT03", m2]) # Simulación
-            lista_materiales_excel.append(["Empalizado", "MAT05", 2]) 
+            lista_materiales_excel.append(["Empalizado", "MAT03", m2])
+            lista_materiales_excel.append(["Empalizado", "MAT05", 2])
             lista_materiales_excel.append(["Revestimiento", "MAT01", round(m2/2)])
             
         elif especialidad == "Electricidad":
             lista_materiales_excel.append(["Instalación Eléctrica", "MAT04", respuestas['enchufes'] * 2])
             lista_materiales_excel.append(["Iluminación", "MAT05", respuestas['luminarias']])
 
-        # 2. CREAR EL DATAFRAME DE EXCEL (Con el formato exacto de tu hoja DESGLOSE)
+        # 2. CREAR EL DATAFRAME DE EXCEL
         df_output = pd.DataFrame(lista_materiales_excel, columns=["Partida", "Codigo Material", "Cantidad"])
         
         # 3. CONVERTIR A EXCEL PARA DESCARGA
@@ -97,4 +92,4 @@ if especialidad != "Selecciona...":
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
-               st.write("💡 **Instrucción:** Abre tu archivo `ECOLUZ_v3.0_RC6.xlsx`. Ve a la hoja `3. DESGLOSE MATERIALES`. Copia los datos de este archivo descargado y pégalos (sin fórmulas). La hoja `APU` y `COTIZACION` se actualizarán solas.")
+        st.write("💡 **Instrucción:** Abre tu archivo `ECOLUZ_v3.0_RC6.xlsx`. Ve a la hoja `3. DESGLOSE MATERIALES`. Copia los datos de este archivo descargado y pégalos (sin fórmulas). La hoja `APU` y `COTIZACION` se actualizarán solas.")
