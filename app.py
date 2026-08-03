@@ -97,4 +97,4 @@ if especialidad != "Selecciona...":
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
-        st.write("💡 **Instrucción:** Abre tu archivo `ECOLUZ_v3.0_RC6.xlsx`. Ve a la hoja `3. DESGLOSE MATERIALES`. Copi
+               st.write("💡 **Instrucción:** Abre tu archivo `ECOLUZ_v3.0_RC6.xlsx`. Ve a la hoja `3. DESGLOSE MATERIALES`. Copia los datos de este archivo descargado y pégalos (sin fórmulas). La hoja `APU` y `COTIZACION` se actualizarán solas.")
