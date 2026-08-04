@@ -5,155 +5,184 @@ import datetime
 import json
 
 # --- CONFIGURACIÓN DE DISEÑO ---
-st.set_page_config(page_title="Inspector ECOLUZ", layout="wide", page_icon="🧠")
-st.markdown("""
-<style>
-    .stApp { background-color: #f4f7f6; }
-    h1 { color: #004d40; text-align: center; border-bottom: 4px solid #004d40; padding-bottom: 10px; }
-    .stButton>button { background-color: #004d40; color: white; border-radius: 10px; width: 100%; }
-    .stProgress > div > div > div > div { background-color: #004d40; }
-</style>
-""", unsafe_allow_html=True)
+st.set_page_config(page_title="ECOLUZ Inspector", layout="wide", page_icon="🧠")
 
-st.title("🧠 INSPECTOR INTELIGENTE ECOLUZ")
-st.markdown("### *Levantamiento Técnico Guiado Paso a Paso*")
+# --- ESTADO DE LA SESIÓN ---
+if 'etapa' not in st.session_state:
+    st.session_state.etapa = 0 
+if 'proyecto' not in st.session_state:
+    st.session_state.proyecto = None
+if 'partidas_seleccionadas' not in st.session_state:
+    st.session_state.partidas_seleccionadas = []
+if 'partida_actual_idx' not in st.session_state:
+    st.session_state.partida_actual_idx = 0
+if 'respuestas' not in st.session_state:
+    st.session_state.respuestas = {}
+if 'materiales_totales' not in st.session_state:
+    st.session_state.materiales_totales = []
+if 'especificacion_texto' not in st.session_state:
+    st.session_state.especificacion_texto = []
 
-# --- ESTADO DE LA SESIÓN (Memoria del Cerebro) ---
-if 'paso_actual' not in st.session_state:
-    st.session_state.paso_actual = 0
-if 'historial' not in st.session_state:
-    st.session_state.historial = []
-if 'ruta_completa' not in st.session_state:
-    st.session_state.ruta_completa = []
-
-# --- CONFIGURACIÓN DEL FLUJO (Árbol de Navegación) ---
-FLUJO_TECNICO = {
-    0: {
-        "titulo": "Paso 1 de 5: ¿Qué desea realizar hoy?",
-        "pregunta": "Seleccione el tipo de servicio a cotizar:",
-        "opciones": ["Construcción Nueva", "Remodelación", "Reparación", "Mantención", "Ampliación"],
-        "siguiente_paso": 1
+# --- 1. BIBLIOTECA DE PARTIDAS (El Cerebro Modular) ---
+# Aquí es donde agregarás nuevas "Partidas" sin tocar el motor.
+BIBLIOTECA_PARTIDAS = {
+    "Remodelación": {
+        "Cocina": {
+            "Muros": {
+                "descripcion": "Levantamiento de muros de cocina",
+                "preguntas": [
+                    {"id": "mu_mat", "pregunta": "Material del muro:", "opciones": ["Ladrillo", "Metalcon", "Hormigón"]},
+                    {"id": "mu_estado", "pregunta": "Estado actual:", "opciones": ["Bueno", "Regular", "Malo"]},
+                    {"id": "mu_humedad", "pregunta": "¿Hay humedad visible?", "opciones": ["Sí", "No"]},
+                    {"id": "mu_revest", "pregunta": "Revestimiento final:", "opciones": ["Cerámica", "Pintura", "Estuco"]}
+                ],
+                "reglas": {
+                    "mu_humedad": {
+                        "Sí": {"accion": "agregar_material", "material": "Impermeabilizante", "unidad": "unid"}
+                    }
+                }
+            },
+            "Pisos": {
+                "descripcion": "Levantamiento de pisos",
+                "preguntas": [
+                    {"id": "pi_tipo", "pregunta": "Tipo de piso a instalar:", "opciones": ["Cerámica", "Porcelanato", "Vinílico"]},
+                    {"id": "pi_m2", "pregunta": "Metros cuadrados aproximados (m²):", "tipo": "numero"}
+                ],
+                "reglas": {}
+            }
+        },
+        "Baño": {
+            "Pisos": {
+                "descripcion": "Levantamiento de pisos de baño",
+                "preguntas": [
+                    {"id": "ba_pi_tipo", "pregunta": "Tipo de piso a instalar:", "opciones": ["Cerámica", "Porcelanato"]},
+                    {"id": "ba_pi_imper", "pregunta": "¿Requiere impermeabilización bajo el piso?", "opciones": ["Sí", "No"]}
+                ],
+                "reglas": {
+                    "ba_pi_imper": {
+                        "Sí": {"accion": "agregar_material", "material": "Membrana impermeabilizante", "unidad": "m2"}
+                    }
+                }
+            }
+        }
     },
-    1: {
-        "titulo": "Paso 2 de 5: Especialidad requerida",
-        "pregunta": "¿Qué especialidad técnica involucra este proyecto?",
-        "opciones": ["Construcción (Albañilería/Metalcon)", "Pintura y Estucos", "Electricidad y SEC", "Gasfitería y Sanitarios", "Carpintería y Molduras", "Revestimientos y Pisos"],
-        "siguiente_paso": 2
-    },
-    2: {
-        "titulo": "Paso 3 de 5: Área de intervención",
-        "pregunta": "¿Qué recinto o área específica se va a intervenir?",
-        "opciones": ["Cocina", "Baño", "Living/Comedor", "Habitaciones", "Fachada Exterior", "Toda la propiedad"],
-        "siguiente_paso": 3
-    },
-    3: {
-        "titulo": "Paso 4 de 5: Estado y Diagnóstico",
-        "pregunta": "¿Cuál es el estado actual o el problema principal en esa área?",
-        "opciones": ["Buen estado (solo mejoras)", "Humedad / Filtraciones", "Grietas / Daños estructurales", "Desgaste por uso", "Instalaciones obsoletas"],
-        "siguiente_paso": 4
-    },
-    4: {
-        "titulo": "Paso 5 de 5: Materiales y Preferencias",
-        "pregunta": "¿Con qué tipo de calidad de materiales desea trabajar?",
-        "opciones": ["Económico", "Estándar", "Premium"],
-        "siguiente_paso": -1  # -1 significa "Fin del levantamiento"
+    "Ampliación": {
+        "Nuevo Recinto": {
+            "Fundaciones": {
+                "descripcion": "Levantamiento de fundaciones",
+                "preguntas": [
+                    {"id": "amp_fund", "pregunta": "Tipo de fundación:", "opciones": ["Corrida", "Aislada", "Losa"]},
+                    {"id": "amp_excav", "pregunta": "Profundidad de excavación (metros):", "tipo": "numero"}
+                ],
+                "reglas": {}
+            }
+        }
     }
 }
 
-# --- BARRA DE PROGRESO ---
-progress_val = (st.session_state.paso_actual + 1) / len(FLUJO_TECNICO)
-st.progress(progress_val)
+# --- 2. MOTOR DE NAVEGACIÓN ---
+etapa = st.session_state.etapa
 
-# --- VARIABLE PARA CONTROLAR EL FIN ---
-levantamiento_terminado = False
+# ETAPA 0: INICIO (Selección de proyecto)
+if etapa == 0:
+    st.title("🧠 INSPECTOR TÉCNICO ECOLUZ")
+    st.subheader("¿Qué tipo de proyecto realizará?")
+    col1, col2 = st.columns(2)
+    if col1.button("🏠 Remodelación"):
+        st.session_state.proyecto = "Remodelación"
+        st.session_state.etapa = 1
+        st.rerun()
+    if col2.button("📐 Ampliación"):
+        st.session_state.proyecto = "Ampliación"
+        st.session_state.etapa = 1
+        st.rerun()
 
-# --- LÓGICA DE NAVEGACIÓN ---
-paso_actual = st.session_state.paso_actual
-
-# Si el paso actual es -1, el levantamiento terminó
-if paso_actual == -1:
-    levantamiento_terminado = True
-
-# Si el levantamiento NO ha terminado, mostramos la pregunta actual
-if not levantamiento_terminado:
-    config = FLUJO_TECNICO.get(paso_actual)
+# ETAPA 1: SELECCIÓN DE PARTIDAS (Recintos y Elementos)
+elif etapa == 1:
+    st.subheader(f"Seleccione las partidas a intervenir para {st.session_state.proyecto}")
+    proyecto_data = BIBLIOTECA_PARTIDAS[st.session_state.proyecto]
+    partidas = []
+    for recinto, elementos in proyecto_data.items():
+        for elemento in elementos.keys():
+            partidas.append(f"{recinto} - {elemento}")
     
-    if config:
-        st.subheader(config["titulo"])
-        st.write(f"**{config['pregunta']}**")
-        
-        opciones = config['opciones']
-        siguiente = config['siguiente_paso']
-        
-        st.write("---")
-        # Mostramos los botones (máximo 3 por fila para que se vea bien en celular)
-        cols = st.columns(min(len(opciones), 3))
-        
-        for i, opcion in enumerate(opciones):
-            with cols[i % 3]:
-                if st.button(f"➡️ {opcion}", key=f"btn_{paso_actual}_{i}"):
-                    # 1. Guardar respuesta en el historial
-                    st.session_state.historial.append({"paso": paso_actual, "respuesta": opcion})
-                    # 2. Guardar la ruta para la especificación
-                    st.session_state.ruta_completa.append(opcion)
-                    # 3. Actualizar el paso actual al siguiente
-                    st.session_state.paso_actual = siguiente
-                    # 4. Recargar la página para mostrar el nuevo paso
-                    st.rerun()
+    st.session_state.partidas_seleccionadas = st.multiselect("Partidas a intervenir:", partidas)
+    
+    if st.button("Iniciar Levantamiento Técnico"):
+        if st.session_state.partidas_seleccionadas:
+            st.session_state.etapa = 2
+            st.rerun()
+        else:
+            st.warning("Selecciona al menos una partida.")
 
-# --- PANTALLA FINAL (Generación del Informe) ---
-if levantamiento_terminado:
+# ETAPA 2: LEVANTAMIENTO (Árbol de preguntas por partida)
+elif etapa == 2:
+    idx_actual = st.session_state.partida_actual_idx
+    
+    if idx_actual < len(st.session_state.partidas_seleccionadas):
+        partida_nombre = st.session_state.partidas_seleccionadas[idx_actual]
+        recinto, elemento = partida_nombre.split(" - ")
+        
+        # Obtener la configuración de la partida
+        config_partida = BIBLIOTECA_PARTIDAS[st.session_state.proyecto][recinto][elemento]
+        st.subheader(f"📋 Levantando: {partida_nombre}")
+        st.write(config_partida["descripcion"])
+        
+        # Formulario de preguntas
+        with st.form(f"form_{idx_actual}"):
+            respuestas_temp = {}
+            for pregunta in config_partida["preguntas"]:
+                if pregunta.get("tipo") == "numero":
+                    respuestas_temp[pregunta["id"]] = st.number_input(pregunta["pregunta"], min_value=0, step=1.0)
+                else:
+                    respuestas_temp[pregunta["id"]] = st.radio(pregunta["pregunta"], pregunta["opciones"])
+            
+            if st.form_submit_button("✅ Finalizar esta partida"):
+                # Guardar respuestas
+                st.session_state.respuestas[partida_nombre] = respuestas_temp
+                
+                # Procesar reglas y generar materiales automáticamente
+                for p_id, respuesta in respuestas_temp.items():
+                    if p_id in config_partida["reglas"]:
+                        regla = config_partida["reglas"][p_id]
+                        if respuesta in regla:
+                            accion = regla[respuesta]
+                            if accion["accion"] == "agregar_material":
+                                st.session_state.materiales_totales.append({
+                                    "Partida": partida_nombre,
+                                    "Material": accion["material"],
+                                    "Unidad": accion["unidad"],
+                                    "Cantidad": "Por calcular" 
+                                })
+                                
+                # Avanzar a la siguiente partida
+                st.session_state.partida_actual_idx += 1
+                st.rerun()
+    else:
+        # Si ya no hay más partidas, pasar al final
+        st.session_state.etapa = 3
+        st.rerun()
+
+# ETAPA 3: FINALIZACIÓN
+elif etapa == 3:
     st.balloons()
-    st.success("🎯 ¡Levantamiento técnico completado exitosamente!")
+    st.success("🎉 ¡Levantamiento técnico completado!")
+    st.subheader("📄 Generando Especificación y Listado de Materiales")
     
-    st.markdown("---")
-    st.subheader("📋 Resumen del levantamiento realizado:")
-    for i, respuesta in enumerate(st.session_state.ruta_completa):
-        st.write(f"**Paso {i+1}:** {respuesta}")
-    
-    st.markdown("---")
-    st.subheader("🛠️ ESPECIFICACIÓN TÉCNICA Y MATERIALES")
-    
-    # --- Lógica Inteligente de Materiales basada en las respuestas ---
-    lista_materiales = []
-    
-    # Analizamos el historial para saber qué materiales calcular
-    if "Construcción Nueva" in st.session_state.ruta_completa:
-        lista_materiales.append(["Cimientos", "Cemento", "10 sacos"])
-        lista_materiales.append(["Cimientos", "Arena", "5 m3"])
-        
-        if "Metalcon" in st.session_state.ruta_completa: # El sistema debe detectar Metalcon
-            lista_materiales.append(["Estructura", "Perfiles Metalcon", "40 unid"])
-            lista_materiales.append(["Aislación", "Lana de Vidrio", "15 m2"])
-            lista_materiales.append(["Fijaciones", "Tornillos autoperforantes", "2 cajas"])
-            
-        elif "Albañilería" in st.session_state.ruta_completa:
-            lista_materiales.append(["Muros", "Ladrillos", "600 unid"])
-            
-    if "Humedad" in st.session_state.ruta_completa:
-        lista_materiales.append(["Reparación", "Impermeabilizante", "2 unid"])
-        lista_materiales.append(["Reparación", "Sellador de grietas", "1 unid"])
-        
-    if "Premium" in st.session_state.ruta_completa:
-        lista_materiales.append(["Terminaciones", "Pintura Premium", "2 galones"])
-        
-    # Convertir a DataFrame y descargar
-    df = pd.DataFrame(lista_materiales, columns=["Partida", "Material", "Cantidad"])
+    # --- GENERAR EXCEL DE MATERIALES ---
+    df = pd.DataFrame(st.session_state.materiales_totales)
     
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='ESPECIFICACION_TECNICA')
+        df.to_excel(writer, index=False, sheet_name='MATERIALES_ESPECIFICACION')
     
     st.download_button(
-        label="📥 DESCARGAR ESPECIFICACIÓN Y MATERIALES (.xlsx)",
+        label="📥 DESCARGAR EXCEL CON MATERIALES (.xlsx)",
         data=output.getvalue(),
-        file_name=f"Especificacion_ECOLUZ_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        file_name=f"Materiales_ECOLUZ_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
     )
     
-    # Botón para reiniciar el proceso
-    if st.button("🔄 Iniciar nuevo levantamiento"):
-        st.session_state.paso_actual = 0
-        st.session_state.historial = []
-        st.session_state.ruta_completa = []
+    if st.button("🔄 Iniciar nuevo proyecto"):
+        for key in st.session_state.keys():
+            del st.session_state[key]
         st.rerun()
