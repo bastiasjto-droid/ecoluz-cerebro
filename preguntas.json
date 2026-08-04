@@ -1,1 +1,38 @@
-
+{
+  "Remodelación": {
+    "Muros": [
+      { "id": "mu_mat", "pregunta": "¿Material del muro?", "tipo": "select", "opciones": ["Ladrillo", "Metalcon", "Hormigón", "Madera"] },
+      { "id": "mu_estado", "pregunta": "¿Estado del muro?", "tipo": "select", "opciones": ["Bueno", "Regular", "Malo"] },
+      { "id": "mu_humedad", "pregunta": "¿Hay humedad visible?", "tipo": "bool", "regla": { "True": "Impermeabilizante" } },
+      { "id": "mu_revest", "pregunta": "¿Revestimiento final?", "tipo": "select", "opciones": ["Cerámica", "Pintura", "Estuco"] }
+    ],
+    "Pisos": [
+      { "id": "pi_tipo", "pregunta": "¿Tipo de piso a instalar?", "tipo": "select", "opciones": ["Cerámica", "Porcelanato", "Vinílico", "Piso flotante"] },
+      { "id": "pi_m2", "pregunta": "¿Metros cuadrados?", "tipo": "float", "regla": { ">=50": "Adhesivo especial" } },
+      { "id": "pi_estado", "pregunta": "¿Estado del piso actual?", "tipo": "select", "opciones": ["Bueno", "Requiere nivelación", "Requiere demolición"] }
+    ],
+    "Cielos": [
+      { "id": "ci_tipo", "pregunta": "¿Tipo de cielo?", "tipo": "select", "opciones": ["Volcanita", "PVC", "Madera", "Yeso"] },
+      { "id": "ci_altura", "pregunta": "¿Altura del cielo (metros)?", "tipo": "float" }
+    ],
+    "Pintura": [
+      { "id": "pin_tipo", "pregunta": "¿Tipo de pintura?", "tipo": "select", "opciones": ["Látex", "Esmalte", "Óleo", "Antihumedad"] },
+      { "id": "pin_manos", "pregunta": "¿Número de manos?", "tipo": "select", "opciones": ["1", "2", "3"] }
+    ],
+    "Electricidad": [
+      { "id": "elec_tablero", "pregunta": "¿Nuevo tablero eléctrico?", "tipo": "bool", "regla": { "True": "Tablero automático" } },
+      { "id": "elec_circuitos", "pregunta": "¿Número de circuitos?", "tipo": "int" },
+      { "id": "elec_enchufes", "pregunta": "¿Número de enchufes?", "tipo": "int" },
+      { "id": "elec_luminarias", "pregunta": "¿Número de luminarias?", "tipo": "int" }
+    ]
+  },
+  "Ampliación": {
+    "Fundaciones": [
+      { "id": "amp_fund", "pregunta": "¿Tipo de fundación?", "tipo": "select", "opciones": ["Corrida", "Aislada", "Losa"] },
+      { "id": "amp_m2", "pregunta": "¿Metros cuadrados a ampliar?", "tipo": "float" }
+    ],
+    "Techumbre": [
+      { "id": "amp_techo", "pregunta": "¿Tipo de cubierta?", "tipo": "select", "opciones": ["Zinc", "Teja", "PV4"] }
+    ]
+  }
+}
