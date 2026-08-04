@@ -1,4 +1,42 @@
 {
+  "Construcción Nueva": {
+    "Información General": [
+      { "id": "cg_tipo", "pregunta": "¿Qué tipo de construcción desea realizar?", "tipo": "select", "opciones": ["Casa", "Local comercial", "Galpón", "Oficina", "Bodega"] },
+      { "id": "cg_uso", "pregunta": "¿Cuál será el uso principal de la construcción?", "tipo": "text" },
+      { "id": "cg_pisos", "pregunta": "¿Será de uno o más pisos?", "tipo": "select", "opciones": ["1 Piso", "2 Pisos", "3 o más pisos"] },
+      { "id": "cg_planos", "pregunta": "¿Cuenta con planos o necesita diseño?", "tipo": "select", "opciones": ["Tengo planos", "Necesito diseño"] },
+      { "id": "cg_m2", "pregunta": "Metros cuadrados totales (m²):", "tipo": "float" }
+    ],
+    "Terreno y Fundaciones": [
+      { "id": "tf_terreno", "pregunta": "¿El terreno es plano o pendiente?", "tipo": "select", "opciones": ["Plano", "Pendiente suave", "Pendiente pronunciada"] },
+      { "id": "tf_servicios", "pregunta": "¿Cuenta con agua y electricidad?", "tipo": "bool", "regla": { "False": "Generador y pozo" } },
+      { "id": "tf_alcantarillado", "pregunta": "¿Alcantarillado o fosa séptica?", "tipo": "select", "opciones": ["Alcantarillado público", "Fosa séptica"] },
+      { "id": "tf_estudio", "pregunta": "¿Se realizó estudio de suelo?", "tipo": "bool", "regla": { "False": "Estudio de mecánica de suelos" } },
+      { "id": "tf_fundacion", "pregunta": "¿Qué tipo de fundación utilizará?", "tipo": "select", "opciones": ["Corrida", "Aislada", "Losa de fundación"] }
+    ],
+    "Estructura y Muros": [
+      { "id": "em_sistema", "pregunta": "Sistema constructivo principal:", "tipo": "select", "opciones": ["Albañilería", "Hormigón armado", "Metalcon", "Madera", "Panel SIP"] },
+      { "id": "em_ladrillo", "pregunta": "Tipo de ladrillo (si aplica):", "tipo": "select", "opciones": ["Fiscal", "Princesa", "No aplica"] },
+      { "id": "em_estuco_int", "pregunta": "¿Llevará estuco interior?", "tipo": "bool", "regla": { "True": "Cemento y arena" } },
+      { "id": "em_estuco_ext", "pregunta": "¿Llevará estuco exterior?", "tipo": "bool", "regla": { "True": "Estuco exterior" } },
+      { "id": "em_impermeabilizante", "pregunta": "¿Llevará impermeabilizante en muros?", "tipo": "bool", "regla": { "True": "Impermeabilizante" } }
+    ],
+    "Techumbre": [
+      { "id": "th_tipo", "pregunta": "Tipo de cubierta:", "tipo": "select", "opciones": ["Zinc", "Teja", "PV4", "Teja asfáltica"] },
+      { "id": "th_aislacion", "pregunta": "¿Instalará aislación térmica?", "tipo": "bool", "regla": { "True": "Lana de vidrio" } },
+      { "id": "th_canaletas", "pregunta": "¿Instalará canaletas?", "tipo": "bool", "regla": { "True": "Canaletas de zinc" } }
+    ],
+    "Pisos": [
+      { "id": "ps_tipo", "pregunta": "Tipo de piso a instalar:", "tipo": "select", "opciones": ["Cerámica", "Porcelanato", "Flotante", "Vinílico", "Madera"] },
+      { "id": "ps_radier", "pregunta": "¿Llevará radier afinado?", "tipo": "bool", "regla": { "True": "Radier afinado" } }
+    ],
+    "Instalaciones": [
+      { "id": "in_enchufes", "pregunta": "¿Número de enchufes?", "tipo": "int" },
+      { "id": "in_luminarias", "pregunta": "¿Número de luminarias?", "tipo": "int" },
+      { "id": "in_banos", "pregunta": "¿Número de baños?", "tipo": "int", "regla": { ">0": "Set de grifería" } },
+      { "id": "in_certificacion", "pregunta": "¿Necesita certificación SEC?", "tipo": "bool", "regla": { "True": "Certificación SEC" } }
+    ]
+  },
   "Remodelación": {
     "Muros": [
       { "id": "mu_mat", "pregunta": "¿Material del muro?", "tipo": "select", "opciones": ["Ladrillo", "Metalcon", "Hormigón", "Madera"] },
@@ -8,7 +46,7 @@
     ],
     "Pisos": [
       { "id": "pi_tipo", "pregunta": "¿Tipo de piso a instalar?", "tipo": "select", "opciones": ["Cerámica", "Porcelanato", "Vinílico", "Piso flotante"] },
-      { "id": "pi_m2", "pregunta": "¿Metros cuadrados?", "tipo": "float", "regla": { ">=50": "Adhesivo especial" } },
+      { "id": "pi_m2", "pregunta": "¿Metros cuadrados?", "tipo": "float" },
       { "id": "pi_estado", "pregunta": "¿Estado del piso actual?", "tipo": "select", "opciones": ["Bueno", "Requiere nivelación", "Requiere demolición"] }
     ],
     "Cielos": [
@@ -17,7 +55,8 @@
     ],
     "Pintura": [
       { "id": "pin_tipo", "pregunta": "¿Tipo de pintura?", "tipo": "select", "opciones": ["Látex", "Esmalte", "Óleo", "Antihumedad"] },
-      { "id": "pin_manos", "pregunta": "¿Número de manos?", "tipo": "select", "opciones": ["1", "2", "3"] }
+      { "id": "pin_manos", "pregunta": "¿Número de manos?", "tipo": "select", "opciones": ["1", "2", "3"] },
+      { "id": "pin_superficie", "pregunta": "¿Superficie a pintar (m²)?", "tipo": "float", "regla": { ">50": "Rodillo grande" } }
     ],
     "Electricidad": [
       { "id": "elec_tablero", "pregunta": "¿Nuevo tablero eléctrico?", "tipo": "bool", "regla": { "True": "Tablero automático" } },
@@ -32,7 +71,45 @@
       { "id": "amp_m2", "pregunta": "¿Metros cuadrados a ampliar?", "tipo": "float" }
     ],
     "Techumbre": [
-      { "id": "amp_techo", "pregunta": "¿Tipo de cubierta?", "tipo": "select", "opciones": ["Zinc", "Teja", "PV4"] }
+      { "id": "amp_techo", "pregunta": "¿Tipo de cubierta?", "tipo": "select", "opciones": ["Zinc", "Teja", "PV4"] },
+      { "id": "amp_estructura", "pregunta": "¿Estructura de madera o metal?", "tipo": "select", "opciones": ["Madera", "Metal"] }
+    ],
+    "Electricidad": [
+      { "id": "amp_elec", "pregunta": "¿Requiere nueva instalación eléctrica?", "tipo": "bool", "regla": { "True": "Cableado" } }
+    ],
+    "Gasfitería": [
+      { "id": "amp_gas", "pregunta": "¿Requiere agua caliente?", "tipo": "bool", "regla": { "True": "Calefón" } }
+    ]
+  },
+  "Pintura": {
+    "Información General": [
+      { "id": "pin_ubica", "pregunta": "¿Pintura interior o exterior?", "tipo": "select", "opciones": ["Interior", "Exterior", "Ambas"] },
+      { "id": "pin_m2", "pregunta": "Superficie a pintar (m²):", "tipo": "float" }
+    ],
+    "Especificaciones": [
+      { "id": "pin_tipo", "pregunta": "Tipo de pintura:", "tipo": "select", "opciones": ["Látex", "Esmalte", "Óleo", "Antihumedad", "Epoxi"] },
+      { "id": "pin_manos", "pregunta": "Número de manos:", "tipo": "select", "opciones": ["1", "2", "3"] },
+      { "id": "pin_estado", "pregunta": "Estado de la superficie:", "tipo": "select", "opciones": ["Buena", "Requiere lijado", "Requiere pasta muro"] },
+      { "id": "pin_marca", "pregunta": "¿Tiene marca preferida?", "tipo": "text" }
+    ]
+  },
+  "Gasfitería": {
+    "Instalación": [
+      { "id": "gas_agua", "pregunta": "¿Instalación de agua fría o caliente?", "tipo": "select", "opciones": ["Solo fría", "Fría y caliente"] },
+      { "id": "gas_calefon", "pregunta": "Tipo de calefón:", "tipo": "select", "opciones": ["A gas", "Eléctrico", "Bomba de calor"] },
+      { "id": "gas_banos", "pregunta": "Número de baños:", "tipo": "int", "regla": { ">0": "Set de grifería" } },
+      { "id": "gas_fugas", "pregunta": "¿Hay fugas visibles?", "tipo": "bool", "regla": { "True": "Sellador de fugas" } }
+    ]
+  },
+  "Techumbre": {
+    "General": [
+      { "id": "tec_m2", "pregunta": "Superficie del techo (m²):", "tipo": "float" },
+      { "id": "tec_cubierta", "pregunta": "Tipo de cubierta:", "tipo": "select", "opciones": ["Zinc", "Teja", "PV4", "Policarbonato"] },
+      { "id": "tec_estructura", "pregunta": "Estructura de soporte:", "tipo": "select", "opciones": ["Madera", "Metal"] }
+    ],
+    "Detalles": [
+      { "id": "tec_aislacion", "pregunta": "¿Instalará aislación?", "tipo": "bool", "regla": { "True": "Lana de roca" } },
+      { "id": "tec_canaletas", "pregunta": "¿Instalará canaletas?", "tipo": "bool", "regla": { "True": "Canaletas" } }
     ]
   }
 }
